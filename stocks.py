@@ -26,24 +26,38 @@ for filename in os.listdir(directory):
     index.add(len(index), prices - np.mean(prices))
     ticket_to_prices[ticket] = prices
 
-selected_ticker = 'AAPL'
 
-tic = time.perf_counter()
-selected_prices = ticket_to_prices[selected_ticker]
-approx_matches, _, _ = index.search(
-    selected_prices - np.mean(selected_prices), 10)
-approx_tickets = [tickets[match] for match in approx_matches]
-toc = time.perf_counter()
-print('Approximate matches:', ','.join(approx_tickets))
-print(f'- Measurement took {toc - tic:0.4f} seconds')
+def search_and_print(selected_ticker: str = 'AAPL'):
+
+    tic = time.perf_counter()
+    selected_prices = ticket_to_prices[selected_ticker]
+    approx_matches, _, _ = index.search(
+        selected_prices - np.mean(selected_prices), 10)
+    approx_tickets = [tickets[match] for match in approx_matches]
+    toc = time.perf_counter()
+    print('Approximate matches:', ','.join(approx_tickets))
+    print(f'- Measurement took {toc - tic:0.4f} seconds')
+
+    tic = time.perf_counter()
+    covariances = [
+        (ticket, covariance(selected_prices, prices))
+        for ticket, prices in ticket_to_prices.items()]
+    covariances = sorted(covariances, key=lambda x: x[1], reverse=True)
+    exact_tickets = [ticket for ticket, _ in covariances[:10]]
+    toc = time.perf_counter()
+    print('Exact matches:', ','.join(exact_tickets))
+    print(f'- Measurement took {toc - tic:0.4f} seconds')
 
 
-tic = time.perf_counter()
-covariances = [
-    (ticket, covariance(selected_prices, prices))
-    for ticket, prices in ticket_to_prices.items()]
-covariances = sorted(covariances, key=lambda x: x[1], reverse=True)
-exact_tickets = [ticket for ticket, _ in covariances[:10]]
-toc = time.perf_counter()
-print('Exact matches:', ','.join(exact_tickets))
-print(f'- Measurement took {toc - tic:0.4f} seconds')
+try:
+    while True:
+        selected: str = input('Type a ticker from NASDAQ, like AAPL: ')
+        if selected not in ticket_to_prices:
+            print(f'Missing {selected}, try again')
+            continue
+
+        print('You entered:', selected)
+        search_and_print(selected)
+
+except KeyboardInterrupt:
+    exit(0)
