@@ -3,3 +3,5 @@ usearch
 pandas
 numpy
 geocoder
+transformers
+tqdm
